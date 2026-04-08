@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GuardScanner V2 | Logic Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0b0f19; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .panel { background-color: #161b22; border: 1px solid #30363d; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-4xl font-extrabold text-blue-500 tracking-tight italic">GUARDSCANNER <span class="text-white">V2</span></h1>
+                <p class="text-gray-400">Black-Box Reverse Engineering & Logic Discovery Framework</p>
+            </div>
+            <div id="downloadArea" class="hidden">
+                <a href="/download-latest" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold transition shadow-lg shadow-green-900/20">
+                    Download Professional Audit PDF
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="panel p-6 rounded-2xl shadow-2xl col-span-1 border-t-4 border-t-blue-600">
+                <h2 class="text-xl font-bold mb-6 text-blue-400">⚙ Configuration</h2>
+
+                <input id="urlInput" type="text" placeholder="http://testphp.vulnweb.com" 
+                       class="w-full bg-gray-900 border border-gray-700 p-4 rounded-lg mb-6 focus:outline-none focus:border-blue-500 text-green-400 font-mono">
+
+                <div class="space-y-3 mb-8">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Operational Mode</label>
+
+                    <div class="flex items-center p-2 rounded hover:bg-gray-800">
+                        <input type="radio" name="mode" id="modeRecon" checked class="w-4 h-4">
+                        <label for="modeRecon" class="ml-3 text-sm text-gray-300">Logic Recon (APIs / Cookies / Tech)</label>
+                    </div>
+
+                    <div class="flex items-center p-2 rounded hover:bg-gray-800">
+                        <input type="radio" name="mode" id="modeSQLi" class="w-4 h-4">
+                        <label for="modeSQLi" class="ml-3 text-sm text-gray-300">Targeted SQL Injection</label>
+                    </div>
+
+                    <div class="flex items-center p-2 rounded hover:bg-gray-800">
+                        <input type="radio" name="mode" id="modeXSS" class="w-4 h-4">
+                        <label for="modeXSS" class="ml-3 text-sm text-gray-300">Targeted XSS Audit</label>
+                    </div>
+
+                    <div class="flex items-center p-2 rounded hover:bg-gray-800">
+                        <input type="radio" name="mode" id="modeCMD" class="w-4 h-4">
+                        <label for="modeCMD" class="ml-3 text-sm text-gray-300">Targeted Command Injection</label>
+                    </div>
+
+                    <div class="flex items-center p-2 rounded hover:bg-gray-800">
+                        <input type="radio" name="mode" id="modePath" class="w-4 h-4">
+                        <label for="modePath" class="ml-3 text-sm text-gray-300">Path Traversal Probe</label>
+                    </div>
+
+                    <div class="flex items-center p-2 rounded hover:bg-gray-800 border-t border-gray-800 mt-2 pt-4">
+                        <input type="radio" name="mode" id="modeFull" class="w-4 h-4">
+                        <label for="modeFull" class="ml-3 text-sm font-bold text-blue-300">Full Deep Audit (PDF)</label>
+                    </div>
+                </div>
+
+                <button onclick="triggerAction()" id="scanBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-black transition-all">
+                    EXECUTE AUDIT
+                </button>
+            </div>
+
+            <div class="panel p-8 rounded-2xl shadow-2xl col-span-2 border-t-4 border-t-green-500">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-green-400">🛡 Analysis Engine Console</h2>
+                    <span id="statusIndicator" class="text-xs font-bold px-3 py-1 bg-gray-800 rounded-full text-gray-500 uppercase tracking-widest">Idle</span>
+                </div>
+
+                <div id="console" class="bg-black p-6 rounded-xl h-[550px] overflow-y-auto text-sm font-mono text-green-400 border border-gray-800 shadow-inner">
+                    > System ready.
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+async function triggerAction() {
+    const url = document.getElementById('urlInput').value;
+    const consoleBox = document.getElementById('console');
+    const downloadArea = document.getElementById('downloadArea');
+    const status = document.getElementById('statusIndicator');
+
+    if (!url) return alert("URL Required.");
+
+    let mode = document.querySelector('input[name="mode"]:checked').id;
+
+    consoleBox.innerHTML = `<span class="text-blue-400 animate-pulse">[*] Launching module: ${mode}...</span>`;
+    status.innerText = "Processing";
+    downloadArea.classList.add('hidden');
+
+    try {
+        const response = await fetch('/scan', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ url: url, mode: mode })
+        });
+
+        const data = await response.json();
+
+        if (mode === "modeRecon") {
+            consoleBox.innerHTML += `<br><br><span class="text-white font-bold underline">PHASE 1: SYSTEM FINGERPRINT</span>`;
+            consoleBox.innerHTML += `<br>[+] Infrastructure: ${(data.tech_stack || []).join(', ') || 'Not Detected'}`;
+
+            if ((data.cookie_analysis || []).length > 0) {
+                consoleBox.innerHTML += `<br><br><span class="text-pink-400 font-bold underline">PHASE 2: SESSION & STATE</span>`;
+                data.cookie_analysis.forEach(c => {
+                    consoleBox.innerHTML += `<br>[!] ${c.name} | HttpOnly: ${c.httpOnly} | Secure: ${c.secure}`;
+                });
+            }
+
+            if ((data.api_hints || []).length > 0 || (data.js_logic_hints || []).length > 0) {
+                consoleBox.innerHTML += `<br><br><span class="text-yellow-400 font-bold underline">PHASE 3: API & JS LOGIC</span>`;
+                (data.api_hints || []).forEach(h => consoleBox.innerHTML += `<br>[!] API Hint: ${h}`);
+                (data.js_logic_hints || []).forEach(l => consoleBox.innerHTML += `<br>[!] JS Logic: ${l}`);
+            }
+
+            if ((data.form_analysis || []).length > 0) {
+                consoleBox.innerHTML += `<br><br><span class="text-cyan-400 font-bold underline">PHASE 4: FORMS</span>`;
+                data.form_analysis.forEach(f => {
+                    consoleBox.innerHTML += `<br>[+] Form → ${f.action || 'inline'} (${f.method})`;
+                });
+            }
+
+            if ((data.storage_analysis || []).length > 0) {
+                consoleBox.innerHTML += `<br><br><span class="text-purple-400 font-bold underline">PHASE 5: CLIENT STORAGE</span>`;
+                data.storage_analysis.forEach(s => consoleBox.innerHTML += `<br>[!] Storage: ${s}`);
+            }
+
+            if ((data.security_risk || []).length > 0) {
+                consoleBox.innerHTML += `<br><br><span class="text-red-400 font-bold underline">PHASE 6: SECURITY RISKS</span>`;
+                data.security_risk.forEach(r => consoleBox.innerHTML += `<br>[!] ${r}`);
+            }
+
+        } else {
+            consoleBox.innerHTML += `<br><br><span class="text-green-500 font-bold">[+] Module execution successful.</span>`;
+            downloadArea.classList.remove('hidden');
+        }
+
+    } catch (e) {
+        consoleBox.innerHTML += `<br><span class="text-red-500">[!] Engine Error.</span>`;
+    }
+
+    status.innerText = "Complete";
+}
+</script>
+</body>
+</html>
