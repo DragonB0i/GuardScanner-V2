@@ -134,6 +134,25 @@ Users must obtain proper authorization before scanning any system or website. Un
 
 ---
 
+## 🤝 Looking for Contributors
+
+GuardScanner is evolving into an AI-powered vulnerability scanner.
+
+If you're interested in:
+
+- AI
+- LLMs
+- Cybersecurity
+- Prompt Engineering
+- PDF Generation
+- Open Source
+
+I'd love to collaborate!
+
+Check the Discussions/Issues section to join the project.
+
+
+
 ## Author
 
 DragonB0i
